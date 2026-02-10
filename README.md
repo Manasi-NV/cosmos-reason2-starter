@@ -73,18 +73,71 @@ python scripts/test_video_analysis.py
 ```
 
 
+## Gradio Web UI (Video + Image Upload)
+
+A browser-based UI for uploading videos/images and chatting with the model. Uses vLLM for fast inference.
+
+### 1. Install vLLM and Gradio
+
+```bash
+cd cosmos-reason2
+source .venv/bin/activate
+pip install vllm gradio
+```
+
+### 2. Start the vLLM server (Terminal 1)
+
+```bash
+cd cosmos-reason2
+source .venv/bin/activate
+vllm serve nvidia/Cosmos-Reason2-8B \
+  --allowed-local-media-path "$(pwd)" \
+  --max-model-len 16384 \
+  --media-io-kwargs '{"video": {"num_frames": -1}}' \
+  --reasoning-parser qwen3 \
+  --port 8000
+```
+
+Wait until you see `Application startup complete.` (takes 2-3 minutes on first run).
+
+### 3. Launch the Gradio UI (Terminal 2)
+
+```bash
+cd cosmos-reason2
+source .venv/bin/activate
+python ../ui.py
+```
+
+### 4. Open in browser
+
+If using **VS Code / Cursor Remote SSH**:
+- Press `Ctrl+Shift+P` → type "Forward a Port" → enter `7860`
+- Repeat for port `8000`
+
+Open **http://localhost:7860** in your browser. Upload a video or image, type a prompt, and click "Run Inference".
+
+### 5. Stopping
+
+- Stop the Gradio UI: `Ctrl+C` in Terminal 2
+- Stop the vLLM server: `Ctrl+C` in Terminal 1
+
+
 ## Troubleshooting
 
 ### Out of Memory (OOM)
-Reduce `max_vision_tokens` and `fps` in the script.
+Reduce `max_vision_tokens` and `fps` in the script. For vLLM, reduce `--max-model-len` (e.g. `8192`).
 
 ### Model download issues
 Run `hf auth login` and accept the model license at:
-https://huggingface.co/nvidia/Cosmos-Reason2-2B
+https://huggingface.co/nvidia/Cosmos-Reason2-8B
+
+### Video too long
+The model can handle ~10-15 seconds of video at `--max-model-len 16384` with FPS=4.
+For longer videos, increase `--max-model-len` (e.g. `32768`) if you have enough VRAM.
 
 
 ## Links
 
 - [Cosmos-Reason2 GitHub](https://github.com/nvidia-cosmos/cosmos-reason2)
 - [Cosmos-Reason2 Docs](https://docs.nvidia.com/cosmos/latest/reason2/index.html)
-- [Model on HuggingFace](https://huggingface.co/nvidia/Cosmos-Reason2-2B)
+- [Model on HuggingFace](https://huggingface.co/nvidia/Cosmos-Reason2-8B)
